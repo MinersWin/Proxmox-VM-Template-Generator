@@ -1,93 +1,176 @@
 # Proxmox VM Template Generator
 
+An automated tool for creating and configuring Ubuntu Cloud Image-based VMs in Proxmox VE with standardized settings and security configurations.
 
+## Overview
 
-## Getting started
+This project automates the process of creating Proxmox VMs from Ubuntu Cloud Images. It handles the entire workflow from downloading the cloud images to configuring the final VM template.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Key Features
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Automated download and verification of Ubuntu Cloud Images
+- Pre-configuration of images with essential system settings
+- Automated VM creation in Proxmox with standardized settings
+- Flexible configuration via CSV file
+- Integrated firewall configuration
+- Standardized SSH security settings
+- Network configuration optimization
 
-## Add your files
+## Prerequisites
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- Root access to a Proxmox VE host
+- `virt-customize` tool installed (```apt update -y && apt install libguestfs-tools -y```)
+- Internet connection for downloading Cloud Images
+- Sufficient storage space in the defined storage pool
+- Proxmox VE 7.0 or higher
 
+## Detailed Operation
+
+The script performs the following steps for each VM defined in the CSV:
+
+1. **Pre-flight Checks**
+   - Validates CSV input
+   - Checks for required tools and permissions
+   - Verifies storage availability
+
+2. **Image Management**
+   - Downloads the specified Ubuntu Cloud Image
+   - Stores images in a dedicated directory
+   - Handles cleanup of existing images
+
+3. **Image Customization**
+   - Installs QEMU Guest Agent for better VM management
+   - Configures network settings for improved boot time
+   - Sets up secure SSH configuration
+   - Resets machine-id for template preparation
+
+4. **VM Creation**
+   - Removes existing VM if it exists (prevents ID conflicts)
+   - Creates new VM with standardized settings
+   - Imports customized cloud image
+   - Configures VM hardware settings
+
+5. **Security Configuration**
+   - Applies firewall rules
+   - Sets up secure SSH defaults
+   - Configures system services for security
+
+## Configuration
+
+### CSV Configuration File
+
+VMs are configured via `vms.csv` with the following fields:
+
+```csv
+vm_id,debian_image,storage_pool,vm_name,download_url
+5000,noble-server-cloudimg-amd64.img,MassStorage,ubuntu-24-04-amd64,https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 ```
-cd existing_repo
-git remote add origin https://git.minerswin.de/minerswin/proxmox-vm-template-generator.git
-git branch -M main
-git push -uf origin main
-```
 
-## Integrate with your tools
+- `vm_id`: Unique Proxmox VM ID (1-999999)
+- `debian_image`: Name for the downloaded cloud image
+- `storage_pool`: Proxmox storage pool for VM placement
+- `vm_name`: Display name for the VM
+- `download_url`: Direct URL to the Ubuntu Cloud Image
 
-- [ ] [Set up project integrations](https://git.minerswin.de/minerswin/proxmox-vm-template-generator/-/settings/integrations)
+### System Configurations Applied
 
-## Collaborate with your team
+The resulting VM template includes:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+1. **Network Optimization**
+   - Configured systemd-networkd-wait-online service
+   - Optimized network boot parameters
+   - Improved startup time
 
-## Test and Deploy
+2. **Security Settings**
+   - Hardened SSH configuration
+   - Basic firewall rules
+   - Disabled root password login
+   - SSH key-based authentication preparation
 
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+3. **System Preparation**
+   - Cleaned machine-id
+   - Configured QEMU Guest Agent
+   - Optimized for template usage
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+1. Clone this repository to your Proxmox host
+2. Configure your VMs in `vms.csv`
+3. Execute as root:
+   ```bash
+   cd /path/to/repo
+   ./build.sh vms.csv
+   ```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Required Root Permissions
+
+This script must be run as root on the Proxmox host because it needs to:
+- Create and modify VMs
+- Access Proxmox configuration directories
+- Modify system files within the VM images
+- Configure network and firewall settings
+
+## Directory Structure
+
+```
+.
+├── build.sh              # Main script
+├── vms.csv              # VM configuration file
+├── default.fw           # Default firewall configuration
+├── images/              # Directory for downloaded images (git-ignored)
+└── data/
+    └── etc/
+        ├── ssh/
+        │   └── sshd_config                  # Hardened SSH configuration
+        └── systemd/system/
+            └── systemd-networkd-wait-online.service.d/
+                └── waitany.conf             # Network optimization
+
+```
+
+## Final Template Configuration
+
+The resulting VM template includes:
+
+- **System**
+  - Ubuntu Cloud Image base
+  - QEMU Guest Agent installed
+  - Cleaned machine-id for cloning
+  - Optimized network configuration
+
+- **Security**
+  - Hardened SSH configuration
+  - Basic firewall rules
+  - No default passwords
+  - Prepared for SSH key deployment
+
+- **Network**
+  - Configured for DHCP by default
+  - Optimized network service startup
+  - Ready for cloud-init configuration
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Permission Errors**
+   - Ensure you're running as root
+   - Check Proxmox storage permissions
+
+2. **Download Issues**
+   - Verify internet connectivity
+   - Check URL validity
+   - Ensure sufficient storage space
+
+3. **VM Creation Failures**
+   - Check for VM ID conflicts
+   - Verify storage pool existence
+   - Check Proxmox resource availability
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Contributions are welcome! Please:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
