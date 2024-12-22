@@ -1,0 +1,19 @@
+[OPTIONS]
+
+ndp: 1
+ipfilter: 1
+dhcp: 0
+radv: 0
+enable: 1
+policy_in: ACCEPT
+
+[RULES]
+
+OUT SMTPS(DROP) -log nolog
+OUT SMTP(DROP) -log nolog
+OUT BitTorrent32(DROP) -log nolog
+IN BitTorrent32(DROP) -log nolog
+IN BitTorrent(DROP) -log nolog
+OUT BitTorrent(DROP) -log nolog
+OUT ACCEPT -source +guest/ipfilter-net0 -log nolog
+IN ACCEPT -dest +guest/ipfilter-net0 -log nolog
