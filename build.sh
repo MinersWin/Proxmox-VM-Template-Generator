@@ -4,8 +4,39 @@
 if [ -f "./config.conf" ]; then
     source "./config.conf"
 else
-    echo "Error: Configuration file 'config.conf' not found"
+    echo -e "\e[31mError: Configuration file 'config.conf' not found\e[0m"
     exit 1
+fi
+
+# Check if screen is installed when enabled
+if [ "$USE_SCREEN" = true ]; then
+    if ! command -v screen >/dev/null 2>&1; then
+        echo -e "\e[31mError: Screen is not installed but required (USE_SCREEN=true in config.conf)"
+        echo "To install screen, run:"
+        echo "  apt-get install screen"
+        echo -e "Or disable screen usage by setting USE_SCREEN=false in config.conf\e[0m"
+        exit 1
+    fi
+fi
+
+# Screen handling function
+handle_screen() {
+    if [ "$USE_SCREEN" = true ]; then
+        if screen -list | grep -q "$SCREEN_NAME"; then
+            echo "Screen session '$SCREEN_NAME' already exists. Reattaching..."
+            exec screen -r "$SCREEN_NAME"
+            exit 0
+        else
+            echo "Starting new screen session '$SCREEN_NAME'..."
+            screen -S "$SCREEN_NAME" "$0" "$@"
+            exit 0
+        fi
+    fi
+}
+
+# Call screen handler if we're not already in a screen session
+if [ "$USE_SCREEN" = true ] && [ -z "$STY" ]; then
+    handle_screen "$@"
 fi
 
 # Set base directory
@@ -16,7 +47,7 @@ sshdconfig=$(cat "$BASE_DIR/data/etc/ssh/sshd_config")
 
 # Check if CSV file is provided as argument
 if [ $# -ne 1 ]; then
-    echo "Usage: $0 <csv_file>"
+    echo -e "\e[31mUsage: $0 <csv_file>\e[0m"
     echo "CSV format should be: vm_id,debian_image,storage_pool,vm_name,download_url"
     exit 1
 fi
@@ -25,7 +56,7 @@ csv_file="$1"
 
 # Check if CSV file exists
 if [ ! -f "$csv_file" ]; then
-    echo "Error: CSV file '$csv_file' not found"
+    echo -e "\e[31mError: CSV file '$csv_file' not found\e[0m"
     exit 1
 fi
 
@@ -62,7 +93,7 @@ while IFS=, read -r vm_id debian_image storage_pool vm_name download_url; do
     echo "Downloading image: $debian_image"
     wget -O "$image_path" "$download_url"
     if [ $? -ne 0 ]; then
-        echo "Error downloading image: $debian_image"
+        echo -e "\e[31mError downloading image: $debian_image\e[0m"
         continue
     fi
     
