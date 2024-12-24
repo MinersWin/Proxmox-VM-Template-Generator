@@ -1,6 +1,24 @@
 # Proxmox VM Template Generator
 
-An automated tool for creating and configuring Ubuntu Cloud Image-based VMs in Proxmox VE with standardized settings and security configurations.
+An automated tool for creating and configuring Ubuntu Cloud Image-based VMs in Proxmox VE with standardized settings. This tool is specifically designed for VPS providers to create standardized VM templates with simplified user access.
+
+## Important Disclaimer
+
+This tool is designed and used in production by [Nerdscave Hosting](https://nerdscave-hosting.com) and [Servermanagementpanel](https://servermanagementpanel.com). It is specifically tailored for VPS hosting providers who need to maintain a balance between security and usability for their customers.
+
+### Security Notice
+
+By default, this tool configures VMs with:
+- Root-only user setup for simplified customer access
+- SSH configuration allowing both key-based and password authentication for root (configurable in [sshd_config](data/etc/ssh/sshd_config))
+- Basic security settings suitable for VPS environments
+
+**⚠️ Warning**: If you plan to use this for purposes other than VPS hosting, you should consider modifying these security settings:
+- Disable root password authentication
+- Create and use non-root users
+- Implement stricter SSH security policies
+
+**Note**: Future versions will allow all security and system settings to be configured through the [config.conf](config.conf) file.
 
 ## Overview
 
@@ -13,7 +31,7 @@ This project automates the process of creating Proxmox VMs from Ubuntu Cloud Ima
 - Automated VM creation in Proxmox with standardized settings
 - Flexible configuration via CSV file
 - Integrated firewall configuration
-- Standardized SSH security settings
+- VPS-oriented SSH settings
 - Network configuration optimization
 
 ## Prerequisites
@@ -41,7 +59,7 @@ The script performs the following steps for each VM defined in the CSV:
 3. **Image Customization**
    - Installs QEMU Guest Agent for better VM management
    - Configures network settings for improved boot time
-   - Sets up secure SSH configuration
+   - Sets up SSH configuration for VPS access
    - Resets machine-id for template preparation
 
 4. **VM Creation**
@@ -52,8 +70,8 @@ The script performs the following steps for each VM defined in the CSV:
 
 5. **Security Configuration**
    - Applies firewall rules
-   - Sets up secure SSH defaults
-   - Configures system services for security
+   - Sets up SSH for both key and password authentication
+   - Configures system services
 
 ## Configuration
 
@@ -63,10 +81,10 @@ VMs are configured via `vms.csv` with the following fields:
 
 ```csv
 vm_id,debian_image,storage_pool,vm_name,download_url
-5000,noble-server-cloudimg-amd64.img,MassStorage,ubuntu-24-04-amd64,https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+100,noble-server-cloudimg-amd64.img,local-lvm,ubuntu-24-04-amd64,https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 ```
 
-- `vm_id`: Unique Proxmox VM ID (1-999999)
+- `vm_id`: Unique Proxmox VM ID (must be 100 or higher)
 - `debian_image`: Name for the downloaded cloud image
 - `storage_pool`: Proxmox storage pool for VM placement
 - `vm_name`: Display name for the VM
@@ -81,11 +99,11 @@ The resulting VM template includes:
    - Optimized network boot parameters
    - Improved startup time
 
-2. **Security Settings**
-   - Hardened SSH configuration
+2. **VPS Access Settings**
+   - SSH configuration allowing root access
+   - Support for both key-based and password authentication
    - Basic firewall rules
-   - Disabled root password login
-   - SSH key-based authentication preparation
+   - Prepared for customer SSH key injection
 
 3. **System Preparation**
    - Cleaned machine-id
@@ -95,77 +113,20 @@ The resulting VM template includes:
 ## Usage
 
 1. Clone this repository to your Proxmox host
-2. Configure your VMs in `vms.csv`
+2. Configure your VMs in `vms.csv` (remember: VM IDs must be 100 or higher)
 3. Execute as root:
    ```bash
    cd /path/to/repo
    ./build.sh vms.csv
    ```
 
-### Required Root Permissions
+## Production Usage
 
-This script must be run as root on the Proxmox host because it needs to:
-- Create and modify VMs
-- Access Proxmox configuration directories
-- Modify system files within the VM images
-- Configure network and firewall settings
+This tool is actively used in production by:
+- [NerdsCave Hosting](https://nerdscave-hosting.com)
+- [Server Management Panel](https://servermanagementpanel.com)
 
-## Directory Structure
-
-```
-.
-├── build.sh              # Main script
-├── vms.csv              # VM configuration file
-├── default.fw           # Default firewall configuration
-├── images/              # Directory for downloaded images (git-ignored)
-└── data/
-    └── etc/
-        ├── ssh/
-        │   └── sshd_config                  # Hardened SSH configuration
-        └── systemd/system/
-            └── systemd-networkd-wait-online.service.d/
-                └── waitany.conf             # Network optimization
-
-```
-
-## Final Template Configuration
-
-The resulting VM template includes:
-
-- **System**
-  - Ubuntu Cloud Image base
-  - QEMU Guest Agent installed
-  - Cleaned machine-id for cloning
-  - Optimized network configuration
-
-- **Security**
-  - Hardened SSH configuration
-  - Basic firewall rules
-  - No default passwords
-  - Prepared for SSH key deployment
-
-- **Network**
-  - Configured for DHCP by default
-  - Optimized network service startup
-  - Ready for cloud-init configuration
-
-## Troubleshooting
-
-Common issues and solutions:
-
-1. **Permission Errors**
-   - Ensure you're running as root
-   - Check Proxmox storage permissions
-
-2. **Download Issues**
-   - Verify internet connectivity
-   - Check URL validity
-   - Ensure sufficient storage space
-
-3. **VM Creation Failures**
-   - Check for VM ID conflicts
-   - Verify storage pool existence
-   - Check Proxmox resource availability
+For commercial support or custom modifications, please contact the respective hosting providers.
 
 ## Contributing
 
@@ -174,3 +135,7 @@ Contributions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
