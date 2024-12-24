@@ -80,15 +80,16 @@ The script performs the following steps for each VM defined in the CSV:
 VMs are configured via `vms.csv` with the following fields:
 
 ```csv
-vm_id,debian_image,storage_pool,vm_name,download_url
-100,noble-server-cloudimg-amd64.img,local-lvm,ubuntu-24-04-amd64,https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+vm_id,debian_image,vm_name,download_url
+100,noble-server-cloudimg-amd64.img,Ubuntu-24.04-Noble-LTS,https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
 ```
 
 - `vm_id`: Unique Proxmox VM ID (must be 100 or higher)
 - `debian_image`: Name for the downloaded cloud image
-- `storage_pool`: Proxmox storage pool for VM placement
 - `vm_name`: Display name for the VM
 - `download_url`: Direct URL to the Ubuntu Cloud Image
+
+Note: The storage pool is configured globally in `config.conf` using the `DEFAULT_STORAGE_POOL` setting.
 
 ### System Configurations Applied
 

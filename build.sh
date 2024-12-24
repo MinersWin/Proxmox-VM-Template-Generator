@@ -48,7 +48,7 @@ sshdconfig=$(cat "$BASE_DIR/data/etc/ssh/sshd_config")
 # Check if CSV file is provided as argument
 if [ $# -ne 1 ]; then
     echo -e "\e[31mUsage: $0 <csv_file>\e[0m"
-    echo "CSV format should be: vm_id,debian_image,storage_pool,vm_name,download_url"
+    echo "CSV format should be: vm_id,debian_image,vm_name,download_url"
     exit 1
 fi
 
@@ -68,9 +68,12 @@ echo "CSV content:"
 cat "$csv_file"
 
 # Process CSV file, removing any carriage returns and processing line by line
-while IFS=, read -r vm_id debian_image storage_pool vm_name download_url; do
+while IFS=, read -r vm_id debian_image vm_name download_url; do
     # Skip header line
     [ "$vm_id" = "vm_id" ] && continue
+    
+    # Use storage pool from config
+    storage_pool="$DEFAULT_STORAGE_POOL"
     
     echo "Processing line:"
     echo "VM ID: $vm_id"
