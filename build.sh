@@ -99,8 +99,20 @@ while IFS=, read -r vm_id debian_image storage_pool vm_name download_url; do
     
     echo "Processing VM: $vm_name (ID: $vm_id)"
 
+    # Install packages if defined
+    if [ -n "$INSTALL_PACKAGES" ]; then
+        echo "Installing packages: $INSTALL_PACKAGES"
+        for package in $INSTALL_PACKAGES; do
+            echo "Installing package: $package"
+            virt-customize -a "$image_path" --install "$package"
+            if [ $? -ne 0 ]; then
+                echo -e "\e[31mError installing package: $package\e[0m"
+                continue
+            fi
+        done
+    fi
+
     #Prepare Image
-    virt-customize -a "$image_path" --install "$INSTALL_PACKAGES"
     virt-customize -a "$image_path" --mkdir /etc/systemd/system/systemd-networkd-wait-online.service.d/
     virt-customize -a "$image_path" --upload "$NETWORKD_CONF_PATH":/etc/systemd/system/systemd-networkd-wait-online.service.d
     virt-customize -a "$image_path" --delete /etc/ssh/sshd_config
