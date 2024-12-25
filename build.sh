@@ -147,6 +147,7 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     [ -n "$DRIVE_IOTHREAD" ] && drive_attrs="${drive_attrs:+$drive_attrs,}iothread=$DRIVE_IOTHREAD"
     [ -n "$DRIVE_BACKUP" ] && drive_attrs="${drive_attrs:+$drive_attrs,}backup=$DRIVE_BACKUP"
     
+    qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:vm-$vm_id-disk-0${drive_attrs:+,$drive_attrs}
     qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:$vm_id/vm-$vm_id-disk-0.raw${drive_attrs:+,$drive_attrs}
     qm set $vm_id --boot c --bootdisk scsi0
 
@@ -170,6 +171,8 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     
     # Set OS type for optimizations
     qm set $vm_id --ostype $OS_TYPE
+
+    qm set $vm_id --ciuser $VM_DEFAULT_USER
     
     qm template $vm_id
     if [ "$ENABLE_FIREWALL" = true ]; then
