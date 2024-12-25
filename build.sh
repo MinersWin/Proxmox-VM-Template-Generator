@@ -118,8 +118,11 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     fi
 
     #Prepare Image
-    virt-customize -a "$image_path" --mkdir /etc/systemd/system/systemd-networkd-wait-online.service.d/
-    virt-customize -a "$image_path" --upload "$NETWORKD_CONF_PATH":/etc/systemd/system/systemd-networkd-wait-online.service.d
+    # Configure networkd-wait-online if enabled
+    if [ "$ENABLE_NETWORKD_WAIT_CONFIG" = true ]; then
+        virt-customize -a "$image_path" --mkdir /etc/systemd/system/systemd-networkd-wait-online.service.d/
+        virt-customize -a "$image_path" --upload "$NETWORKD_CONF_PATH":/etc/systemd/system/systemd-networkd-wait-online.service.d
+    fi
     
     # Configure SSH if enabled
     if [ "$ENABLE_CUSTOM_SSH" = true ]; then
