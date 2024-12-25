@@ -60,8 +60,10 @@ if [ ! -f "$csv_file" ]; then
     exit 1
 fi
 
-# Create images directory if it doesn't exist
-mkdir -p "$IMAGES_DIR"
+# Check if images directory exists and create if needed
+if [ ! -d "$IMAGES_DIR" ]; then
+    mkdir -p "$IMAGES_DIR"
+fi
 
 # Debug: Show CSV content
 echo "CSV content:"
