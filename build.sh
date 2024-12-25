@@ -168,6 +168,9 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
         qm set $vm_id --onboot 1
     fi
     
+    # Set OS type for optimizations
+    qm set $vm_id --ostype $OS_TYPE
+    
     qm template $vm_id
     if [ "$ENABLE_FIREWALL" = true ]; then
         cp "$DEFAULT_FW_PATH" /etc/pve/firewall/$vm_id.fw
