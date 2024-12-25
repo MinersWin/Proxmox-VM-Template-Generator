@@ -123,7 +123,7 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     virt-customize -a "$image_path" --run-command "echo -n > /etc/machine-id"
     
     # Run Proxmox commands with CSV inputs
-    qm create $vm_id --name "$vm_name" --memory $DEFAULT_MEMORY --net0 virtio,bridge=$DEFAULT_BRIDGE,tag=$DEFAULT_VLAN_TAG
+    qm create $vm_id --name "$vm_name" --memory $DEFAULT_MEMORY --net0 $DEFAULT_NETWORK_CARD,bridge=$DEFAULT_BRIDGE,tag=$DEFAULT_VLAN_TAG
     qm importdisk $vm_id "$image_path" ${storage_pool:-$DEFAULT_STORAGE_POOL}
     qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:vm-$vm_id-disk-0,ssd=1
     
