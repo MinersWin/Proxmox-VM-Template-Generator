@@ -118,9 +118,13 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     #Prepare Image
     virt-customize -a "$image_path" --mkdir /etc/systemd/system/systemd-networkd-wait-online.service.d/
     virt-customize -a "$image_path" --upload "$NETWORKD_CONF_PATH":/etc/systemd/system/systemd-networkd-wait-online.service.d
-    virt-customize -a "$image_path" --delete /etc/ssh/sshd_config
-    virt-customize -a "$image_path" --upload "$SSHD_CONFIG_PATH":/etc/ssh
     virt-customize -a "$image_path" --run-command "echo -n > /etc/machine-id"
+    
+    # Configure SSH if enabled
+    if [ "$ENABLE_CUSTOM_SSH" = true ]; then
+        virt-customize -a "$image_path" --delete /etc/ssh/sshd_config
+        virt-customize -a "$image_path" --upload "$SSHD_CONFIG_PATH":/etc/ssh/sshd_config
+    fi
     
     # Run Proxmox commands with CSV inputs
     qm create $vm_id --name "$vm_name" --memory $DEFAULT_MEMORY --net0 $DEFAULT_NETWORK_CARD,bridge=$DEFAULT_BRIDGE,tag=$DEFAULT_VLAN_TAG
