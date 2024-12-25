@@ -146,7 +146,9 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     fi
     
     qm template $vm_id
-    cp "$DEFAULT_FW_PATH" /etc/pve/firewall/$vm_id.fw
+    if [ "$ENABLE_FIREWALL" = true ]; then
+        cp "$DEFAULT_FW_PATH" /etc/pve/firewall/$vm_id.fw
+    fi
 
     echo "VM creation and configuration completed successfully."
 done < <(tr -d '\r' < "$csv_file")
