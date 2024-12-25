@@ -134,7 +134,7 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     [ -n "$DRIVE_IOTHREAD" ] && drive_attrs="${drive_attrs:+$drive_attrs,}iothread=$DRIVE_IOTHREAD"
     [ -n "$DRIVE_BACKUP" ] && drive_attrs="${drive_attrs:+$drive_attrs,}backup=$DRIVE_BACKUP"
     
-    qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:vm-$vm_id-disk-0${drive_attrs:+,$drive_attrs}
+    qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:$vm_id/vm-$vm_id-disk-0.raw${drive_attrs:+,$drive_attrs}
     
     if [ "$ENABLE_CLOUD_INIT" = true ]; then
         qm set $vm_id --ide2 ${storage_pool:-$DEFAULT_STORAGE_POOL}:cloudinit
