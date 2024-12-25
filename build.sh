@@ -148,6 +148,8 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     if [ "$ENABLE_QEMU_AGENT" = true ]; then
         qm set $vm_id --agent 1
     fi
+
+    qm set $vm_id --cpu cputype=$CPU_TYPE
     
     if [ "$ENABLE_AUTOSTART" = true ]; then
         qm set $vm_id --onboot 1
