@@ -125,7 +125,16 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     # Run Proxmox commands with CSV inputs
     qm create $vm_id --name "$vm_name" --memory $DEFAULT_MEMORY --net0 $DEFAULT_NETWORK_CARD,bridge=$DEFAULT_BRIDGE,tag=$DEFAULT_VLAN_TAG
     qm importdisk $vm_id "$image_path" ${storage_pool:-$DEFAULT_STORAGE_POOL}
-    qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:vm-$vm_id-disk-0,ssd=1
+    
+    # Build drive attributes string
+    drive_attrs=""
+    [ -n "$DRIVE_CACHE" ] && drive_attrs="${drive_attrs:+$drive_attrs,}cache=$DRIVE_CACHE"
+    [ -n "$DRIVE_DISCARD" ] && drive_attrs="${drive_attrs:+$drive_attrs,}discard=$DRIVE_DISCARD"
+    [ -n "$DRIVE_SSD" ] && drive_attrs="${drive_attrs:+$drive_attrs,}ssd=$DRIVE_SSD"
+    [ -n "$DRIVE_IOTHREAD" ] && drive_attrs="${drive_attrs:+$drive_attrs,}iothread=$DRIVE_IOTHREAD"
+    [ -n "$DRIVE_BACKUP" ] && drive_attrs="${drive_attrs:+$drive_attrs,}backup=$DRIVE_BACKUP"
+    
+    qm set $vm_id --scsihw $DEFAULT_SCSIHW --scsi0 ${storage_pool:-$DEFAULT_STORAGE_POOL}:vm-$vm_id-disk-0${drive_attrs:+,$drive_attrs}
     
     if [ "$ENABLE_CLOUD_INIT" = true ]; then
         qm set $vm_id --ide2 ${storage_pool:-$DEFAULT_STORAGE_POOL}:cloudinit
