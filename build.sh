@@ -8,6 +8,21 @@ else
     exit 1
 fi
 
+# Function to load custom configuration
+load_custom_config() {
+    local custom_config="$1"
+    if [ -n "$custom_config" ] && [ "$custom_config" != "-" ]; then
+        local custom_config_path="./custom/${custom_config}.conf"
+        if [ -f "$custom_config_path" ]; then
+            echo "Loading custom configuration: $custom_config_path"
+            source "$custom_config_path"
+        else
+            echo -e "\e[31mWarning: Custom configuration file '$custom_config_path' not found\e[0m"
+            exit 1
+        fi
+    fi
+}
+
 # Check if screen is installed when enabled
 if [ "$USE_SCREEN" = true ]; then
     if ! command -v screen >/dev/null 2>&1; then
@@ -48,7 +63,7 @@ sshdconfig=$(cat "$BASE_DIR/data/etc/ssh/sshd_config")
 # Check if CSV file is provided as argument
 if [ $# -ne 1 ]; then
     echo -e "\e[31mUsage: $0 <csv_file>\e[0m"
-    echo "CSV format should be: vm_id,debian_image,vm_name,download_url"
+    echo "CSV format should be: custom,vm_id,debian_image,vm_name,download_url"
     exit 1
 fi
 
@@ -70,37 +85,44 @@ echo "CSV content:"
 cat "$csv_file"
 
 # Process CSV file, removing any carriage returns and processing line by line
-while IFS=, read -r vm_id debian_image vm_name download_url; do
+while IFS=, read -r custom vm_id debian_image vm_name download_url; do
     # Skip header line
     [ "$vm_id" = "vm_id" ] && continue
+    
+    # Reset to default configuration (in case previous iteration loaded custom config)
+    source "./config.conf"
+    
+    # Load custom configuration if specified
+    load_custom_config "$custom"
     
     # Use storage pool from config
     storage_pool="$DEFAULT_STORAGE_POOL"
     
     echo "Processing line:"
+    echo "Custom: $custom"
     echo "VM ID: $vm_id"
     echo "Image: $debian_image"
     echo "Storage: $storage_pool"
     echo "Name: $vm_name"
     echo "URL: $download_url"
     
-    # Check if image exists, if not download it
-    image_path="$IMAGES_DIR/$debian_image"
-    # Remove VM if it already exists
-    if [ $(qm list | grep -c "$vm_id") -ne 0 ]; then
-        echo "Removing existing VM: $vm_id"
-        qm destroy $vm_id
-    fi
+    # # Check if image exists, if not download it
+     image_path="$IMAGES_DIR/$debian_image"
+    # # Remove VM if it already exists
+    # if [ $(qm list | grep -c "$vm_id") -ne 0 ]; then
+    #     echo "Removing existing VM: $vm_id"
+    #     qm destroy $vm_id
+    # fi
 
-    # Remove image if it already exists
-    rm -f "$image_path"
-    # Download image
-    echo "Downloading image: $debian_image"
-    wget -O "$image_path" "$download_url"
-    if [ $? -ne 0 ]; then
-        echo -e "\e[31mError downloading image: $debian_image\e[0m"
-        continue
-    fi
+    # # Remove image if it already exists
+    # rm -f "$image_path"
+    # # Download image
+    # echo "Downloading image: $debian_image"
+    # wget -O "$image_path" "$download_url"
+    # if [ $? -ne 0 ]; then
+    #     echo -e "\e[31mError downloading image: $debian_image\e[0m"
+    #     continue
+    # fi
     
     echo "Processing VM: $vm_name (ID: $vm_id)"
 
@@ -138,6 +160,8 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     # Run Proxmox commands with CSV inputs
     qm create $vm_id --name "$vm_name" --memory $DEFAULT_MEMORY --net0 $DEFAULT_NETWORK_CARD,bridge=$DEFAULT_BRIDGE,tag=$DEFAULT_VLAN_TAG
     qm importdisk $vm_id "$image_path" ${storage_pool:-$DEFAULT_STORAGE_POOL}
+    echo     qm importdisk $vm_id "$image_path" ${storage_pool:-$DEFAULT_STORAGE_POOL}
+
     
     # Build drive attributes string
     drive_attrs=""
@@ -171,6 +195,8 @@ while IFS=, read -r vm_id debian_image vm_name download_url; do
     
     # Set OS type for optimizations
     qm set $vm_id --ostype $OS_TYPE
+
+    qm set $vm_id --bios $BIOS_TYPE
 
     qm set $vm_id --ciuser $VM_DEFAULT_USER
     
