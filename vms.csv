@@ -1,5 +1,5 @@
 cutom,vm_id,debian_image,vm_name,download_url
-windows,5050,26100.1742.amd64fre.ge_release_svc_refresh.240906-0331_server_serverdatacentereval_en-us.qcow2,Windows-2025,https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2025
+alma,5005,AlmaLinux-8-GenericCloud-latest.x86_64.qcow2,AlmaLinux-8,https://repo.almalinux.org/almalinux/8/cloud/x86_64/images/AlmaLinux-8-GenericCloud-latest.x86_64.qcow2
 -,5021,trusty-server-cloudimg-amd64-disk1.img,Ubuntu-14.04-Trusty-LTS,https://cloud-images.ubuntu.com/trusty/current/trusty-server-cloudimg-amd64-disk1.img
 -,5022,xenial-server-cloudimg-amd64-disk1.img,Ubuntu-16.04-Xenial-LTS,https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
 -,5023,bionic-server-cloudimg-amd64.img,Ubuntu-18.04-Bionic-LTS,https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img

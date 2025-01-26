@@ -105,24 +105,25 @@ while IFS=, read -r custom vm_id debian_image vm_name download_url; do
     echo "Storage: $storage_pool"
     echo "Name: $vm_name"
     echo "URL: $download_url"
-    
-    # # Check if image exists, if not download it
-     image_path="$IMAGES_DIR/$debian_image"
-    # # Remove VM if it already exists
-    # if [ $(qm list | grep -c "$vm_id") -ne 0 ]; then
-    #     echo "Removing existing VM: $vm_id"
-    #     qm destroy $vm_id
-    # fi
 
-    # # Remove image if it already exists
-    # rm -f "$image_path"
-    # # Download image
-    # echo "Downloading image: $debian_image"
-    # wget -O "$image_path" "$download_url"
-    # if [ $? -ne 0 ]; then
-    #     echo -e "\e[31mError downloading image: $debian_image\e[0m"
-    #     continue
-    # fi
+    # Check if image exists, if not download it
+    image_path="$IMAGES_DIR/$debian_image"
+
+    # Remove image if it already exists
+    rm -f "$image_path"
+    # Download image
+    echo "Downloading image: $debian_image"
+    wget --no-check-certificate -O "$image_path" "$download_url"
+    if [ $? -ne 0 ]; then
+        echo -e "\e[31mError downloading image: $debian_image\e[0m"
+        continue
+    fi
+    
+    # Check if image was downloaded if not stop execution for this template
+    if [ ! -f "$image_path" ]; then
+        echo -e "\e[31mError: Image file not found: $image_path\e[0m"
+        exit 1
+    fi
     
     echo "Processing VM: $vm_name (ID: $vm_id)"
 
@@ -152,9 +153,32 @@ while IFS=, read -r custom vm_id debian_image vm_name download_url; do
         virt-customize -a "$image_path" --upload "$SSHD_CONFIG_PATH":/etc/ssh/sshd_config
     fi
 
+    # Replace Custom Configs if CUSTOM_CONFIGS is true, loop through each config in the string seperated by spaces, replace the path before the first comma wit virt-edit with the content of the path after the comma
+    # Example: 
+    # CUSTOM_CONFIGS="alma-cloud alma-network"
+    # alma-cloud="/etc/cloud/cloud.cfg,custom-configs/alma-cloud.cfg"
+    # alma-network="/etc/systemd/system/systemd-networkd-wait-online.service.d/waitany.conf,custom-configs/alma-network.conf"
+    # alma-ssh="/etc/ssh/sshd_config,custom-configs/alma-ssh.conf"
+
+    if [ -n"$CUSTOM_CONFIGS"]; then
+        for config in $CUSTOM_CONFIGS; do
+            path=$(eval echo \$$config | cut -d, -f1)
+            file=$(eval echo \$$config | cut -d, -f2)
+            virt-customize -a "$image_path" --delete "$path"
+            virt-customize -a "$image_path" --upload "$file":"$path"
+        done
+    fi
+
+
     # Reset machine-id if enabled
     if [ "$RESET_MACHINE_ID" = true ]; then
         virt-customize -a "$image_path" --run-command "echo -n > /etc/machine-id"
+    fi
+
+    # Remove VM if it already exists
+    if [ $(qm list | grep -c "$vm_id") -ne 0 ]; then
+        echo "Removing existing VM: $vm_id"
+        qm destroy $vm_id
     fi
     
     # Run Proxmox commands with CSV inputs
